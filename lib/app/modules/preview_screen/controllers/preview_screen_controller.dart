@@ -1,20 +1,103 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:image_picker_for_web/image_picker_for_web.dart';
+import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'dart:html' as html;
 
 class PreviewScreenController extends GetxController {
   var excelData = <Map<String, dynamic>>[].obs;
+  var rowKeys = <int, GlobalKey>{}.obs; // Store GlobalKeys for each row
   RxList<Uint8List> images = <Uint8List>[].obs;
   Rx<Uint8List?> imageBytes = Rx<Uint8List?>(null);
   RxMap<int, Uint8List> rowImages = <int, Uint8List>{}.obs;
-
   final count = 0.obs;
   RxString imageName = ''.obs;
+  final GlobalKey globalKey = GlobalKey();
+  RxInt hoveredRowId = (-1).obs;
+
+  // Define the setHoveredRowId method
+  void setHoveredRowId(int? rowId) {
+    hoveredRowId.value =
+        rowId ?? -1; // Use -1 or any default value for no hover
+    print("Hovered Row ID set to: $rowId");
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeKeys();
+  }
+
+  void _initializeKeys() {
+    rowKeys.clear(); // Reset the keys before populating
+    for (var row in excelData) {
+      int rowId = row['id'] ?? row.hashCode;
+      rowKeys[rowId] = GlobalKey(); // Assign a unique GlobalKey for each row
+    }
+  }
+
+  // Function to print a specific widget
+  Future<void> printSpecificWidget(int rowId) async {
+    try {
+      // Hide the hover effect before capturing
+      hoveredRowId.value = -1;
+
+      // Delay to allow UI update before capturing
+      await Future.delayed(Duration(milliseconds: 100));
+
+      final key = rowKeys[rowId];
+      if (key == null) {
+        print("Key not found for row.");
+        return;
+      }
+
+      final boundary =
+      key.currentContext!.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        print("Render boundary is null.");
+        return;
+      }
+
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final buffer = byteData!.buffer.asUint8List();
+
+      final pdf = pw.Document();
+      final imageProvider = pw.MemoryImage(buffer);
+
+      pdf.addPage(pw.Page(
+          build: (pw.Context context) =>
+              pw.Center(child: pw.Image(imageProvider))));
+
+      final pdfBytes = await pdf.save();
+      await Printing.layoutPdf(onLayout: (_) => pdfBytes);
+
+      final blob = html.Blob([pdfBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..target = 'blank'
+        ..download = 'print_specific_row.pdf';
+      anchor.click();
+      html.Url.revokeObjectUrl(url);
+
+      // Restore hover functionality after printing
+      hoveredRowId.value = rowId;
+    } catch (e) {
+      print("Error during printing: $e");
+    }
+  }
+
 
   Future<void> pickAndReadExcelFile() async {
     try {
@@ -77,12 +160,25 @@ class PreviewScreenController extends GetxController {
               return cell?.value;
             }),
           );
+          // Ensure each row has a unique 'id'
+          rowData['id'] ??= rowData.hashCode;
           tempData.add(rowData);
         }
       }
     }
     excelData.clear();
     excelData.addAll(tempData);
+    _initializeKeys(); // Call this after updating excelData
+  }
+
+  formatDate(dynamic date) {
+    if (date == null) return '';
+    try {
+      final DateTime parsedDate = DateTime.parse(date.toString());
+      return DateFormat('dd-MM-yyyy').format(parsedDate);
+    } catch (e) {
+      return date.toString();
+    }
   }
 
   bool isBase64(String str) {
@@ -114,9 +210,19 @@ class PreviewScreenController extends GetxController {
     }
   }
 
-  // Function to delete the image
-  Future<void> deleteImage(rowId) async {
-    imageBytes.value = null;
-    // imageName.value = '';
+  // Function to delete rowImages by rowId (GlobalKey)
+  Future<void> deleteRowImageById(int rowId) async {
+    final key = rowKeys[rowId];
+
+    if (key != null) {
+      // Remove the image associated with this rowId
+      rowImages.remove(rowId);
+      // Reset the GlobalKey for the rowId
+      rowKeys[rowId] = GlobalKey();
+      update(); // Trigger UI update
+      print("Image and GlobalKey for rowId $rowId deleted.");
+    } else {
+      print("RowId $rowId not found.");
+    }
   }
 }
