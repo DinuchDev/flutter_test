@@ -8,6 +8,7 @@ abstract class Routes {
   static const EXCEL_JSON = _Paths.EXCEL_JSON;
   static const EXCEL_JSON_DISPLAY = _Paths.EXCEL_JSON_DISPLAY;
   static const PREVIEW_SCREEN = _Paths.PREVIEW_SCREEN;
+  static const CHOOSE_SAMPLE_CARD = _Paths.CHOOSE_SAMPLE_CARD;
 }
 
 abstract class _Paths {
@@ -17,4 +18,5 @@ abstract class _Paths {
   static const EXCEL_JSON = '/excel-json';
   static const EXCEL_JSON_DISPLAY = '/excel-json-display';
   static const PREVIEW_SCREEN = '/preview-screen';
+  static const CHOOSE_SAMPLE_CARD = '/choose-sample-card';
 }

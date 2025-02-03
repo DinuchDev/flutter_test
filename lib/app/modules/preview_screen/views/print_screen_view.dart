@@ -75,7 +75,7 @@ class PrintScreenView extends GetView<PreviewScreenController> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/png/vet-card.png', // Widget to be printed
+                'assets/png/VetExpress-card-bgr.png', // Widget to be printed
                 width: 400,
                 height: 600,
                 fit: BoxFit.contain,

@@ -34,7 +34,9 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
           .toList();
 
       if (rowKeys.isEmpty) {
-        print("No valid rows found for printing.");
+        Get.snackbar(
+            'Warning!', 'Please Select Excel File before printing all.',
+            snackPosition: SnackPosition.TOP);
         return;
       }
 
@@ -67,8 +69,21 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
         ..download = 'print_all_images.pdf';
       anchor.click();
       html.Url.revokeObjectUrl(url);
+
+      Get.snackbar(
+        'Success',
+        'Completed successfully! Please wait few minutes...',
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
     } catch (e) {
       print("Error during printing: $e");
+      Get.snackbar(
+        'Error',
+        'Failed to print: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
     }
   }
 
@@ -76,7 +91,7 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.orange.shade900,
+        backgroundColor: Colors.black.withOpacity(0.1),
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -84,16 +99,23 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
             ElevatedButton(
               style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all(Colors.white.withOpacity(0.9))),
+                      MaterialStateProperty.all(Colors.white.withOpacity(0.6))),
               onPressed: controller.pickAndReadExcelFile,
               child: const Text('Select Excel File'),
             ),
             ElevatedButton(
               style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all(Colors.white.withOpacity(0.9))),
+                      MaterialStateProperty.all(Colors.white.withOpacity(0.6))),
+              onPressed: () => controller.changeBackground(),
+              child: Text('Choose Sample Cards'),
+            ),
+            ElevatedButton(
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all(Colors.white.withOpacity(0.6))),
               onPressed: () => printMultipleWidgets(context),
-              child: Text('Print All Cards'),
+              child: Text('Print All'),
             ),
           ],
         ),
@@ -154,12 +176,14 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
                                     key: controller.rowKeys[rowId],
                                     child: Stack(
                                       children: [
-                                        Image.asset(
-                                          'assets/png/vet-card.png',
-                                          width: 400,
-                                          height: 600,
-                                          fit: BoxFit.contain,
-                                        ),
+                                        Obx(() {
+                                          return Image.asset(
+                                            controller.backgroundImage.value,
+                                            width: 400,
+                                            height: 600,
+                                            fit: BoxFit.contain,
+                                          );
+                                        }),
                                         Container(
                                           width: 400,
                                           height: 600,
@@ -332,8 +356,8 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
                                                             8),
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: Colors.black
-                                                            .withOpacity(0.1),
+                                                        color: Colors
+                                                            .orange.shade900,
                                                         spreadRadius: 1,
                                                         blurRadius: 3,
                                                         offset:
@@ -341,7 +365,7 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
                                                       ),
                                                     ],
                                                   ),
-                                                  child: Column(
+                                                  child: Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
                                                             .center,
@@ -359,26 +383,22 @@ class PreviewScreenView extends GetView<PreviewScreenController> {
                                                         icon: const Icon(
                                                             Icons.print,
                                                             size: 16),
-                                                        label: const Text(
-                                                            'Print Card'),
+                                                        label:
+                                                            const Text('Print'),
                                                       ),
-                                                      Row(
-                                                        children: [
-                                                          TextButton.icon(
-                                                            onPressed: () {
-                                                              // Call the deleted function
-                                                              controller
-                                                                  .deleteRowImageById(
-                                                                      rowId);
-                                                            },
-                                                            icon: const Icon(
-                                                                Icons
-                                                                    .delete_rounded,
-                                                                size: 16),
-                                                            label: const Text(
-                                                                'Delete Img'),
-                                                          ),
-                                                        ],
+                                                      TextButton.icon(
+                                                        onPressed: () {
+                                                          // Call the deleted function
+                                                          controller
+                                                              .deleteRowImageById(
+                                                                  rowId);
+                                                        },
+                                                        icon: const Icon(
+                                                            Icons
+                                                                .delete_forever_rounded,
+                                                            size: 16),
+                                                        label: const Text(
+                                                            'Delete Image'),
                                                       ),
                                                     ],
                                                   ),

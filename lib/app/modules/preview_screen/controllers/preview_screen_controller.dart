@@ -26,11 +26,28 @@ class PreviewScreenController extends GetxController {
   final GlobalKey globalKey = GlobalKey();
   RxInt hoveredRowId = (-1).obs;
 
+  // In PreviewScreenController
+  var backgroundImage = 'assets/png/VetExpress-card-bgr.png'.obs;
+
+// Function to change background image
+  void changeBackground() {
+    if (excelData.isEmpty) {
+      Get.snackbar(
+          'Warning!', 'Please Select Excel File before choosing sample cards.',
+          snackPosition: SnackPosition.TOP);
+      return;
+    }
+
+    backgroundImage.value =
+        backgroundImage.value == 'assets/png/VetExpress-card-bgr.png'
+            ? 'assets/png/BuvaSea-card-bgr.png'
+            : 'assets/png/VetExpress-card-bgr.png';
+  }
+
   // Define the setHoveredRowId method
   void setHoveredRowId(int? rowId) {
-    hoveredRowId.value =
-        rowId ?? -1; // Use -1 or any default value for no hover
-    print("Hovered Row ID set to: $rowId");
+    hoveredRowId.value = rowId ?? -1;
+    // print("Hovered Row ID set to: $rowId");
   }
 
   @override
@@ -50,22 +67,18 @@ class PreviewScreenController extends GetxController {
   // Function to print a specific widget
   Future<void> printSpecificWidget(int rowId) async {
     try {
-      // Hide the hover effect before capturing
       hoveredRowId.value = -1;
-
-      // Delay to allow UI update before capturing
       await Future.delayed(Duration(milliseconds: 100));
 
       final key = rowKeys[rowId];
       if (key == null) {
-        print("Key not found for row.");
+        // print("Key not found for row.");
         return;
       }
-
       final boundary =
-      key.currentContext!.findRenderObject() as RenderRepaintBoundary?;
+          key.currentContext!.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
-        print("Render boundary is null.");
+        // print("Render boundary is null.");
         return;
       }
 
@@ -90,14 +103,24 @@ class PreviewScreenController extends GetxController {
         ..download = 'print_specific_row.pdf';
       anchor.click();
       html.Url.revokeObjectUrl(url);
-
-      // Restore hover functionality after printing
       hoveredRowId.value = rowId;
+
+      Get.snackbar(
+        'Success',
+        'Completed successfully! Please wait few minutes...',
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
     } catch (e) {
       print("Error during printing: $e");
+      Get.snackbar(
+        'Error',
+        'Failed to print: ${e.toString()}',
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
     }
   }
-
 
   Future<void> pickAndReadExcelFile() async {
     try {
@@ -213,14 +236,11 @@ class PreviewScreenController extends GetxController {
   // Function to delete rowImages by rowId (GlobalKey)
   Future<void> deleteRowImageById(int rowId) async {
     final key = rowKeys[rowId];
-
     if (key != null) {
-      // Remove the image associated with this rowId
       rowImages.remove(rowId);
-      // Reset the GlobalKey for the rowId
       rowKeys[rowId] = GlobalKey();
       update(); // Trigger UI update
-      print("Image and GlobalKey for rowId $rowId deleted.");
+      // print("Image and GlobalKey for rowId $rowId deleted.");
     } else {
       print("RowId $rowId not found.");
     }

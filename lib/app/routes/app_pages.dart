@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 
 import '../modules/Excel_Json/bindings/excel_json_binding.dart';
 import '../modules/Excel_Json/views/excel_json_view.dart';
+import '../modules/choose_sample_card/bindings/choose_sample_card_binding.dart';
+import '../modules/choose_sample_card/views/choose_sample_card_view.dart';
 import '../modules/excel_json_display/bindings/excel_json_display_binding.dart';
 import '../modules/excel_json_display/views/excel_json_display_view.dart';
 import '../modules/home/bindings/home_binding.dart';
@@ -43,6 +45,11 @@ class AppPages {
       name: _Paths.PREVIEW_SCREEN,
       page: () => const PreviewScreenView(),
       binding: PreviewScreenBinding(),
+    ),
+    GetPage(
+      name: _Paths.CHOOSE_SAMPLE_CARD,
+      page: () => const ChooseSampleCardView(),
+      binding: ChooseSampleCardBinding(),
     ),
   ];
 }
